@@ -11,10 +11,12 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserData {
+public class UserAccountData {
 
   private Long id;
   private String login;
+  private String email;
+  private String password;
   private String activationCode;
   private boolean active;
 

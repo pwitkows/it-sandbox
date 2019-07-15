@@ -12,11 +12,11 @@ public class UserRegistrationFacade {
         new UserRegistration(serviceProvider, confirmationMailSender, userRegistrationNotifier);
   }
 
-  public Long createUserAccount(UserRegistrationInput registrationInput) {
-    return this.userRegistration.createUserAccount(registrationInput);
+  public UserAccountData createUserAccount(UserRegistrationInput registrationInput) {
+    return userRegistration.createUserAccount(registrationInput);
   }
 
-  public void activateUserAccount(String activationCode) {
-    this.userRegistration.activateUserAccount(activationCode);
+  public UserAccountData activateUserAccount(String activationCode) {
+    return userRegistration.activateUserAccount(activationCode);
   }
 }

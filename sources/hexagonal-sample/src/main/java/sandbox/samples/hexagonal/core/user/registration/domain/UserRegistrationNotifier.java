@@ -2,6 +2,6 @@ package sandbox.samples.hexagonal.core.user.registration.domain;
 
 public interface UserRegistrationNotifier {
 
-  void sendMessage(UserData userData);
+  void sendMessage(UserAccountData userData);
 
 }

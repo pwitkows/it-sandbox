@@ -11,24 +11,29 @@ class UserRegistration {
   private ConfirmationMailSender confirmationMailSender;
   private UserRegistrationNotifier userRegistrationNotifier;
 
-  Long createUserAccount(UserRegistrationInput registrationInput) {
+  UserAccountData createUserAccount(UserRegistrationInput registrationInput) {
     validate(registrationInput);
-    String confirmationCode = RandomStringUtils.randomAlphanumeric(20);
-    Long userId = serviceProvider.createUser(registrationInput, confirmationCode);
+    final String activationCode = RandomStringUtils.randomAlphanumeric(20);
+    UserAccountData userData = new UserAccountData();
+    userData.setActivationCode(activationCode);
+    userData.setEmail(registrationInput.getEmail());
+    userData.setPassword(registrationInput.getPassword());
+    userData.setLogin(registrationInput.getLogin());
 
     ConfirmationMailData confirmationMailData =  ConfirmationMailData.builder()
-        .confirmationCode(confirmationCode)
+        .confirmationCode(activationCode)
         .mailTo(registrationInput.getEmail())
         .login(registrationInput.getLogin()).build();
     confirmationMailSender.send(confirmationMailData);
-    return userId;
+    return userData;
   }
 
-  void activateUserAccount(String activationCode) {
-    UserData userData = serviceProvider.findUserByActivationCode(activationCode)
+  UserAccountData activateUserAccount(String activationCode) {
+    UserAccountData userData = serviceProvider.findUserByActivationCode(activationCode)
         .orElseThrow(() ->  new RuntimeException("Couldn't confirm your account."));
-    serviceProvider.activateAccount(userData.getLogin());
+    userData.setActive(true);
     userRegistrationNotifier.sendMessage(userData);
+    return userData;
   }
 
   private void validate(UserRegistrationInput registrationInput) {

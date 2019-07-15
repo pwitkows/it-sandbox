@@ -1,7 +1,11 @@
 package sandbox.samples.hexagonal.core.user.registration.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -12,6 +16,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import sandbox.samples.hexagonal.core.user.registration.domain.UserRegistrationInput.UserRegistrationInputBuilder;
@@ -44,15 +49,21 @@ public class UserRegistrationTest {
   }
 
   @Test
-  public void shouldSaveUserRegistrationDataWithConfirmationCode() {
+  public void shouldPrepareUserAccountDataWithGeneratedActivationCode() {
     // given
     UserRegistrationInput registrationInput = sampleRegistrationInput().build();
 
     // when
-    setupDomainObject().createUserAccount(registrationInput);
+    UserAccountData userAccountData = setupDomainObject().createUserAccount(registrationInput);
 
     // then
-    verify(userRegistrationService, times(1)).createUser(eq(registrationInput), notNull());
+    assertNotNull(userAccountData.getActivationCode());
+    assertEquals(registrationInput.getLogin(), userAccountData.getLogin());
+    assertEquals(registrationInput.getPassword(), userAccountData.getPassword());
+    assertEquals(registrationInput.getEmail(), userAccountData.getEmail());
+    assertNull(userAccountData.getId());
+    assertFalse(userAccountData.isActive());
+
   }
 
   @Test
@@ -70,21 +81,21 @@ public class UserRegistrationTest {
   @Test
   public void shouldActivateUserAccount() {
     // given
-    UserData userData = sampleUserData();
+    UserAccountData userData = sampleUserData();
     when(userRegistrationService.findUserByActivationCode(userData.getActivationCode()))
         .thenReturn(Optional.of(userData));
 
     // when
-    setupDomainObject().activateUserAccount(userData.getActivationCode());
+    UserAccountData userAccountData = setupDomainObject().activateUserAccount(userData.getActivationCode());
 
     // then
-    verify(userRegistrationService, times(1)).activateAccount(userData.getLogin());
+    assertTrue(userAccountData.isActive());
   }
 
   @Test
   public void shouldSendEventWhenUserAccountActivated() {
     // given
-    UserData userData = sampleUserData();
+    UserAccountData userData = sampleUserData();
     when(userRegistrationService.findUserByActivationCode(userData.getActivationCode()))
         .thenReturn(Optional.of(userData));
 
@@ -98,7 +109,7 @@ public class UserRegistrationTest {
   @Test
   public void shouldThrowExceptionWhenConfirmationCodeIsInvalid() {
     // given
-    UserData userData = sampleUserData();
+    UserAccountData userData = sampleUserData();
     when(userRegistrationService.findUserByActivationCode(userData.getActivationCode()))
         .thenReturn(Optional.of(userData));
 
@@ -120,8 +131,8 @@ public class UserRegistrationTest {
         userRegistrationService, userRegistrationMailSender, userRegistrationNotifier);
   }
 
-  private UserData sampleUserData() {
-    UserData userData = new UserData();
+  private UserAccountData sampleUserData() {
+    UserAccountData userData = new UserAccountData();
     userData.setLogin(RandomStringUtils.randomAlphanumeric(10));
     userData.setActivationCode(RandomStringUtils.randomAlphanumeric(20));
     userData.setActive(false);
